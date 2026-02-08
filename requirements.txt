@@ -1,0 +1,8 @@
+opencv-python
+ultralytics
+picamera2
+python-dotenv
+openai
+pillow
+pydantic
+pyttsx3

@@ -74,17 +74,13 @@ best_ncnn_model/
 # Piper TTS engine files
 piper/
 
-# Documentation and process files
-process/
-tasks/
-*.txt
+
 
 # Allow README
 !README.md
 
 # Generated data
-suspicious_events/
-recordings/
+
 
 # Config and PID files
 *.json
