@@ -84,6 +84,7 @@ piper/
 
 # Config and PID files
 *.json
+!suspicious_events/*.json
 .detection_pid
 
 # Training data

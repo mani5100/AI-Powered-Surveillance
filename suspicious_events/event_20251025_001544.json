@@ -1,0 +1,5 @@
+{
+  "is_legitimate": true,
+  "alert_message": "A knife has been detected. Please ensure the context and handling are appropriate to maintain safety.",
+  "confidence": 0.95
+}

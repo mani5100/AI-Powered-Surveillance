@@ -1,0 +1,5 @@
+{
+  "is_legitimate": true,
+  "alert_message": "The image contains a legitimate detection of a cigarette. Cigarettes can pose health risks, including respiratory issues and increased risk of diseases such as cancer. Smoking indoors can also pose fire hazards and contribute to secondhand smoke exposure.",
+  "confidence": 0.83
+}

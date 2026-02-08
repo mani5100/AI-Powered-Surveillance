@@ -1,0 +1,5 @@
+{
+  "is_legitimate": true,
+  "alert_message": "A cigarette has been detected, posing a potential health and fire risk.",
+  "confidence": 0.95
+}

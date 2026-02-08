@@ -1,0 +1,5 @@
+{
+  "is_legitimate": true,
+  "alert_message": "A cigarette has been detected being held by the individual. Smoking poses health risks and may violate non-smoking policies in certain areas.",
+  "confidence": 0.94
+}
