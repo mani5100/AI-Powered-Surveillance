@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Event Details - Security Surveillance{% endblock %}
+
+{% block content %}
+<!-- Back Button -->
+<div class="mb-6">
+    <a href="/events" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+        <i class="fas fa-arrow-left mr-2"></i>Back to Event Gallery
+    </a>
+</div>
+
+<!-- Loading State -->
+<div id="loading-state" class="text-center py-12">
+    <i class="fas fa-spinner fa-spin text-4xl text-gray-400 mb-4"></i>
+    <p class="text-gray-500">Loading event details...</p>
+</div>
+
+<!-- Error State -->
+<div id="error-state" class="hidden bg-red-50 border border-red-200 rounded-lg p-8 text-center">
+    <i class="fas fa-exclamation-circle text-5xl text-red-400 mb-4"></i>
+    <h2 class="text-2xl font-bold text-red-700 mb-2">Event Not Found</h2>
+    <p class="text-red-600 mb-4">The requested event could not be found.</p>
+    <a href="/events" class="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition">
+        Return to Event Gallery
+    </a>
+</div>
+
+<!-- Event Content -->
+<div id="event-content" class="hidden">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Event Details</h1>
+        <p class="text-gray-600" id="event-id-display">Event ID: Loading...</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column: Image -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="relative">
+                    <img id="event-image" src="" alt="Event Image" class="w-full h-auto">
+                    
+                    <!-- Confidence Badge Overlay -->
+                    <div class="absolute top-4 right-4">
+                        <span id="confidence-badge" class="px-4 py-2 bg-red-500 text-white text-lg font-bold rounded-full shadow-lg">
+                            Loading...
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Image Caption -->
+                <div class="p-4 bg-gray-50 border-t border-gray-200">
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Full-resolution image captured by surveillance camera
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Details -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Threat Level Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Threat Assessment
+                </h2>
+                
+                <!-- Confidence Score -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Confidence Score</label>
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-grow bg-gray-200 rounded-full h-3">
+                            <div id="confidence-bar" class="bg-red-500 h-3 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <span id="confidence-text" class="text-lg font-bold text-gray-800">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Object Types -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Detected Objects</label>
+                    <div id="object-types-container" class="flex flex-wrap gap-2">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Timestamp -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Detection Time</label>
+                    <p class="text-gray-800 flex items-center">
+                        <i class="fas fa-clock mr-2 text-gray-500"></i>
+                        <span id="event-timestamp">Loading...</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- AI Analysis Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-brain text-purple-500 mr-2"></i>AI Analysis
+                </h2>
+                
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <p id="alert-message" class="text-gray-800 leading-relaxed">
+                        Loading analysis...
+                    </p>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Analysis powered by GPT-4 Vision API
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-cog text-gray-600 mr-2"></i>Actions
+                </h2>
+                
+                <div class="space-y-3">
+                    <button onclick="downloadImage()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-download mr-2"></i>Download Image
+                    </button>
+                    
+                    <button onclick="viewRawData()" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-code mr-2"></i>View Raw JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Raw JSON Modal (hidden by default) -->
+<div id="json-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <h3 class="text-2xl font-bold text-gray-800">Raw Event Data</h3>
+            <button onclick="closeJsonModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-auto max-h-[70vh]">
+            <pre id="json-content" class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm"></pre>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let eventData = null;
+    const eventId = window.location.pathname.split('/').pop();
+    
+    // Fetch event details
+    async function loadEventDetails() {
+        try {
+            const response = await fetch(`/api/events/${eventId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                eventData = data.event;
+                displayEventDetails(eventData);
+            } else {
+                showError();
+            }
+        } catch (error) {
+            console.error('Error loading event:', error);
+            showError();
+        }
+    }
+    
+    // Display event details
+    function displayEventDetails(event) {
+        // Hide loading, show content
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('event-content').classList.remove('hidden');
+        
+        // Update page elements
+        document.getElementById('event-id-display').textContent = `Event ID: ${event.id}`;
+        document.getElementById('event-image').src = `/event-images/${event.image_filename}`;
+        document.getElementById('event-image').alt = `Event ${event.id}`;
+        
+        // Confidence score
+        const confidencePct = event.confidence_pct;
+        const confidenceColor = event.confidence >= 0.8 ? 'red' : 'yellow';
+        document.getElementById('confidence-badge').textContent = `${confidencePct}% Confidence`;
+        document.getElementById('confidence-badge').className = `px-4 py-2 bg-${confidenceColor}-500 text-white text-lg font-bold rounded-full shadow-lg`;
+        document.getElementById('confidence-text').textContent = `${confidencePct}%`;
+        document.getElementById('confidence-bar').style.width = `${confidencePct}%`;
+        document.getElementById('confidence-bar').className = `bg-${confidenceColor}-500 h-3 rounded-full transition-all`;
+        
+        // Object types
+        const objectTypesHtml = event.object_types.map(obj => `
+            <span class="px-3 py-1 bg-red-100 text-red-700 text-sm rounded-full font-semibold">
+                <i class="fas fa-exclamation-triangle mr-1"></i>${obj}
+            </span>
+        `).join('');
+        document.getElementById('object-types-container').innerHTML = objectTypesHtml;
+        
+        // Timestamp
+        document.getElementById('event-timestamp').textContent = event.timestamp_str;
+        
+        // Alert message
+        document.getElementById('alert-message').textContent = event.alert_message;
+        
+        // Update page title
+        document.title = `Event ${event.id} - Security Surveillance`;
+    }
+    
+    // Show error state
+    function showError() {
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('error-state').classList.remove('hidden');
+    }
+    
+    // Download image
+    function downloadImage() {
+        if (!eventData) return;
+        
+        const link = document.createElement('a');
+        link.href = `/events/${eventData.id}.jpg`;
+        link.download = `event_${eventData.id}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // View raw JSON data
+    function viewRawData() {
+        if (!eventData) return;
+        
+        const jsonContent = document.getElementById('json-content');
+        jsonContent.textContent = JSON.stringify(eventData, null, 2);
+        document.getElementById('json-modal').classList.remove('hidden');
+    }
+    
+    // Close JSON modal
+    function closeJsonModal() {
+        document.getElementById('json-modal').classList.add('hidden');
+    }
+    
+    // Close modal on background click
+    document.getElementById('json-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeJsonModal();
+        }
+    });
+    
+    // Load event on page load
+    loadEventDetails();
+</script>
+{% endblock %}

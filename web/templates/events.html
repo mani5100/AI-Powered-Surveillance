@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Event Gallery - Security Surveillance{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-800 mb-2">Event Gallery</h1>
+    <p class="text-gray-600">Browse all detected suspicious events</p>
+</div>
+
+<!-- Filter Controls Section -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-filter text-gray-600 mr-2"></i>Filters
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Date Range Filter -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Date Range</label>
+            <div class="space-y-2">
+                <input type="date" id="start-date" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="end-date" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+        
+        <!-- Object Type Filter -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Object Type</label>
+            <select id="object-type-filter" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Objects</option>
+                <option value="Cigarette">Cigarette</option>
+                <option value="Fire">Fire</option>
+                <option value="Gun">Gun</option>
+                <option value="Knife">Knife</option>
+                <option value="Vape">Vape</option>
+                <option value="Weapon">Weapon</option>
+            </select>
+        </div>
+        
+        <!-- Filter Actions -->
+        <div class="flex items-end">
+            <div class="space-y-2 w-full">
+                <button onclick="applyFilters()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-search mr-2"></i>Apply Filters
+                </button>
+                <button onclick="clearFilters()" 
+                    class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-times mr-2"></i>Clear
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results Count -->
+    <div class="mt-4 pt-4 border-t border-gray-200">
+        <p class="text-gray-600">
+            <i class="fas fa-info-circle mr-2"></i>
+            <span id="results-count">Loading...</span>
+        </p>
+    </div>
+</div>
+
+<!-- Events Grid -->
+<div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Loading State -->
+    <div class="col-span-full text-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-gray-400 mb-4"></i>
+        <p class="text-gray-500">Loading events...</p>
+    </div>
+</div>
+
+<!-- Empty State (hidden by default) -->
+<div id="empty-state" class="hidden col-span-full text-center py-12">
+    <i class="fas fa-folder-open text-6xl text-gray-300 mb-4"></i>
+    <p class="text-gray-500 text-lg">No events found</p>
+    <p class="text-gray-400">Try adjusting your filters</p>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let allEvents = [];
+    
+    // Fetch all events on page load
+    async function loadEvents() {
+        try {
+            const response = await fetch('/api/events');
+            const data = await response.json();
+            
+            if (data.success) {
+                allEvents = data.events;
+                displayEvents(allEvents);
+                updateResultsCount(allEvents.length);
+            }
+        } catch (error) {
+            console.error('Error loading events:', error);
+            document.getElementById('events-grid').innerHTML = 
+                '<div class="col-span-full text-center py-12 text-red-500">Error loading events</div>';
+        }
+    }
+    
+    // Display events in grid
+    function displayEvents(events) {
+        const grid = document.getElementById('events-grid');
+        const emptyState = document.getElementById('empty-state');
+        
+        if (events.length === 0) {
+            grid.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        emptyState.classList.add('hidden');
+        
+        grid.innerHTML = events.map(event => `
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1">
+                <!-- Event Image -->
+                <div class="relative h-48 bg-gray-200">
+                    <img src="/event-images/${event.image_filename}" 
+                        alt="Event ${event.id}" 
+                        class="w-full h-full object-cover"
+                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect width=%22400%22 height=%22300%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2218%22 fill=%22%239ca3af%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+                    
+                    <!-- Confidence Badge -->
+                    <div class="absolute top-2 right-2">
+                        <span class="px-3 py-1 bg-${event.confidence >= 0.8 ? 'red' : 'yellow'}-500 text-white text-sm font-bold rounded-full shadow-lg">
+                            ${event.confidence_pct}%
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Event Details -->
+                <div class="p-4">
+                    <!-- Object Types -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        ${event.object_types.map(obj => `
+                            <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-semibold">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>${obj}
+                            </span>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Alert Message -->
+                    <p class="text-gray-700 text-sm mb-3 line-clamp-2">
+                        ${event.alert_message}
+                    </p>
+                    
+                    <!-- Timestamp -->
+                    <p class="text-gray-500 text-xs mb-4">
+                        <i class="fas fa-clock mr-1"></i>${event.timestamp_str}
+                    </p>
+                    
+                    <!-- View Details Button -->
+                    <a href="/events/${event.id}" 
+                        class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-eye mr-2"></i>View Details
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Update results count
+    function updateResultsCount(count) {
+        const countElement = document.getElementById('results-count');
+        countElement.textContent = `Showing ${count} event${count !== 1 ? 's' : ''}`;
+    }
+    
+    // Apply filters
+    function applyFilters() {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        const objectType = document.getElementById('object-type-filter').value;
+        
+        let filtered = allEvents;
+        
+        // Filter by date range
+        if (startDate) {
+            filtered = filtered.filter(event => event.timestamp_str >= startDate);
+        }
+        if (endDate) {
+            // Add one day to include the end date
+            const endDateTime = new Date(endDate);
+            endDateTime.setDate(endDateTime.getDate() + 1);
+            const endDateStr = endDateTime.toISOString().split('T')[0];
+            filtered = filtered.filter(event => event.timestamp_str < endDateStr);
+        }
+        
+        // Filter by object type
+        if (objectType) {
+            filtered = filtered.filter(event => 
+                event.object_types.includes(objectType)
+            );
+        }
+        
+        displayEvents(filtered);
+        updateResultsCount(filtered.length);
+    }
+    
+    // Clear filters
+    function clearFilters() {
+        document.getElementById('start-date').value = '';
+        document.getElementById('end-date').value = '';
+        document.getElementById('object-type-filter').value = '';
+        
+        displayEvents(allEvents);
+        updateResultsCount(allEvents.length);
+    }
+    
+    // Initial load
+    loadEvents();
+</script>
+{% endblock %}

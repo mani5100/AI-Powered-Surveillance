@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Security Surveillance{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-800 mb-2">Security Surveillance Dashboard</h1>
+    <p class="text-gray-600">Real-time monitoring and threat detection system</p>
+</div>
+
+<!-- Project Overview Section -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-info-circle text-blue-500 mr-2"></i>Project Overview
+    </h2>
+    <p class="text-gray-700 mb-4">
+        This AI-powered security surveillance system uses cutting-edge YOLOv8 object detection 
+        combined with OpenAI's GPT-4 Vision API to identify and verify suspicious objects in real-time.
+    </p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <i class="fas fa-eye text-blue-600 text-3xl mb-2"></i>
+            <h3 class="font-semibold text-gray-800">Real-time Detection</h3>
+            <p class="text-sm text-gray-600">Continuous monitoring with YOLO object detection</p>
+        </div>
+        <div class="bg-green-50 p-4 rounded-lg">
+            <i class="fas fa-brain text-green-600 text-3xl mb-2"></i>
+            <h3 class="font-semibold text-gray-800">AI Verification</h3>
+            <p class="text-sm text-gray-600">GPT-4 Vision confirms threats and reduces false positives</p>
+        </div>
+        <div class="bg-purple-50 p-4 rounded-lg">
+            <i class="fas fa-bell text-purple-600 text-3xl mb-2"></i>
+            <h3 class="font-semibold text-gray-800">Instant Alerts</h3>
+            <p class="text-sm text-gray-600">Audio and visual notifications for security events</p>
+        </div>
+    </div>
+</div>
+
+<!-- System Status Card -->
+<div id="system-status-card" class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-server text-gray-600 mr-2"></i>System Status
+    </h2>
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <div id="status-indicator" class="w-4 h-4 rounded-full bg-gray-400 animate-pulse"></div>
+            <div>
+                <p class="text-lg font-semibold" id="status-text">Checking...</p>
+                <p class="text-sm text-gray-500" id="status-message">Loading system status</p>
+            </div>
+        </div>
+        <a href="/controls" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+            <i class="fas fa-cog mr-2"></i>Manage
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <!-- Today's Events -->
+    <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold opacity-90">Today's Events</h3>
+            <i class="fas fa-calendar-day text-3xl opacity-75"></i>
+        </div>
+        <p class="text-4xl font-bold" id="todayEvents">0</p>
+        <p class="text-sm opacity-75 mt-2">Detected today</p>
+    </div>
+    
+    <!-- Total Events -->
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold opacity-90">Total Events</h3>
+            <i class="fas fa-chart-line text-3xl opacity-75"></i>
+        </div>
+        <p class="text-4xl font-bold" id="totalEvents">0</p>
+        <p class="text-sm opacity-75 mt-2">All-time</p>
+    </div>
+    
+    <!-- This Week -->
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold opacity-90">This Week</h3>
+            <i class="fas fa-calendar-week text-3xl opacity-75"></i>
+        </div>
+        <p class="text-4xl font-bold" id="thisWeekEvents">0</p>
+        <p class="text-sm opacity-75 mt-2">Past 7 days</p>
+    </div>
+    
+    <!-- Average Confidence -->
+    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold opacity-90">Avg Confidence</h3>
+            <i class="fas fa-percentage text-3xl opacity-75"></i>
+        </div>
+        <p class="text-4xl font-bold" id="avgConfidence">0%</p>
+        <p class="text-sm opacity-75 mt-2">Detection accuracy</p>
+    </div>
+</div>
+
+<!-- Mini Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Events Timeline Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="relative" style="height: 250px;">
+            <canvas id="eventsTimelineChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Event Type Distribution -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="relative" style="height: 250px;">
+            <canvas id="eventTypeChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Events Section -->
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-history text-gray-600 mr-2"></i>Recent Events
+        </h2>
+        <a href="/events" class="text-blue-600 hover:text-blue-800 font-semibold">
+            View All <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+    
+    <div id="recent-events-container" class="space-y-4">
+        <p class="text-center text-gray-500 py-8">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>
+            Loading recent events...
+        </p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    // Fetch system status
+    async function fetchSystemStatus() {
+        try {
+            const response = await fetch('/api/status');
+            const data = await response.json();
+            
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            const statusMessage = document.getElementById('status-message');
+            
+            if (data.status === 'running') {
+                indicator.className = 'w-4 h-4 rounded-full bg-green-500';
+                statusText.textContent = 'Running';
+                statusText.className = 'text-lg font-semibold text-green-600';
+                statusMessage.textContent = 'Detection system is active';
+            } else {
+                indicator.className = 'w-4 h-4 rounded-full bg-gray-400';
+                statusText.textContent = 'Stopped';
+                statusText.className = 'text-lg font-semibold text-gray-600';
+                statusMessage.textContent = 'Detection system is stopped';
+            }
+        } catch (error) {
+            console.error('Error fetching status:', error);
+        }
+    }
+    
+    // Fetch events and update statistics
+    async function fetchEventsAndStats() {
+        try {
+            const response = await fetch('/api/events');
+            const data = await response.json();
+            
+            if (data.success) {
+                const events = data.events;
+                
+                // Update total count
+                document.getElementById('total-count').textContent = events.length;
+                
+                // Calculate today's events
+                const today = new Date().toISOString().split('T')[0];
+                const todayEvents = events.filter(event => 
+                    event.timestamp_str.startsWith(today)
+                );
+                document.getElementById('today-count').textContent = todayEvents.length;
+                
+                // Display recent events (last 5)
+                displayRecentEvents(events.slice(0, 5));
+            }
+        } catch (error) {
+            console.error('Error fetching events:', error);
+            document.getElementById('recent-events-container').innerHTML = 
+                '<p class="text-center text-red-500">Error loading events</p>';
+        }
+    }
+    
+    // Display recent events
+    function displayRecentEvents(events) {
+        const container = document.getElementById('recent-events-container');
+        
+        if (events.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500 py-8">No events recorded yet</p>';
+            return;
+        }
+        
+        container.innerHTML = events.map(event => `
+            <div class="border-l-4 ${event.confidence >= 0.8 ? 'border-red-500' : 'border-yellow-500'} bg-gray-50 p-4 rounded-r-lg hover:shadow-md transition">
+                <div class="flex items-start justify-between">
+                    <div class="flex-grow">
+                        <div class="flex items-center space-x-2 mb-2">
+                            ${event.object_types.map(obj => `
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-semibold">
+                                    ${obj}
+                                </span>
+                            `).join('')}
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                ${event.confidence_pct}% confidence
+                            </span>
+                        </div>
+                        <p class="text-gray-700 text-sm mb-1">${event.alert_message}</p>
+                        <p class="text-gray-500 text-xs">
+                            <i class="fas fa-clock mr-1"></i>${event.timestamp_str}
+                        </p>
+                    </div>
+                    <a href="/events/${event.id}" class="ml-4 text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Initial load
+    fetchSystemStatus();
+    fetchEventsAndStats();
+    
+    // Refresh every 30 seconds
+    setInterval(fetchSystemStatus, 30000);
+    setInterval(fetchEventsAndStats, 30000);
+</script>
+{% endblock %}

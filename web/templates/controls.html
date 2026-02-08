@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}System Controls - Security Surveillance{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-800 mb-2">System Controls</h1>
+    <p class="text-gray-600">Manage detection system and configuration settings</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: System Control -->
+    <div class="lg:col-span-1 space-y-6">
+        <!-- System Status Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-power-off text-gray-600 mr-2"></i>System Status
+            </h2>
+            
+            <!-- Status Display -->
+            <div class="mb-6 p-4 rounded-lg" id="status-display">
+                <div class="flex items-center justify-center space-x-3">
+                    <div id="status-indicator" class="w-6 h-6 rounded-full bg-gray-400 animate-pulse"></div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold" id="status-text">Checking...</p>
+                        <p class="text-sm text-gray-500 mt-1" id="status-message">Loading system status</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Control Buttons -->
+            <div class="space-y-3">
+                <button id="start-btn" onclick="startSystem()" 
+                    class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-play mr-2"></i>Start Detection
+                </button>
+                
+                <button id="stop-btn" onclick="stopSystem()" 
+                    class="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-stop mr-2"></i>Stop Detection
+                </button>
+                
+                <button onclick="refreshStatus()" 
+                    class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold transition">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh Status
+                </button>
+            </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="font-bold text-blue-800 mb-2">
+                <i class="fas fa-info-circle mr-2"></i>Information
+            </h3>
+            <ul class="text-sm text-blue-700 space-y-2">
+                <li><i class="fas fa-check mr-2"></i>YOLOv8 Object Detection</li>
+                <li><i class="fas fa-check mr-2"></i>GPT-4 Vision Verification</li>
+                <li><i class="fas fa-check mr-2"></i>Real-time Monitoring</li>
+                <li><i class="fas fa-check mr-2"></i>Audio Alerts via Piper TTS</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Right Column: Configuration -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-cog text-gray-600 mr-2"></i>Configuration Settings
+            </h2>
+            
+            <form id="config-form" onsubmit="saveConfiguration(event)">
+                <!-- Detection Settings Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                        Detection Settings
+                    </h3>
+                    
+                    <!-- Confidence Threshold -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Confidence Threshold
+                            <span class="text-gray-500 font-normal">(Minimum confidence for object detection)</span>
+                        </label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="confidence-slider" name="confidence_threshold" 
+                                min="0.1" max="0.9" step="0.05" value="0.2"
+                                class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                oninput="updateConfidenceDisplay(this.value)">
+                            <span id="confidence-display" class="text-2xl font-bold text-blue-600 w-16 text-center">0.20</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>More Detections</span>
+                            <span>Higher Accuracy</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis Interval -->
+                    <div class="mb-6">
+                        <label for="analysis-interval" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Analysis Interval (seconds)
+                            <span class="text-gray-500 font-normal">(Time between frame checks)</span>
+                        </label>
+                        <input type="number" id="analysis-interval" name="analysis_interval" 
+                            min="1" max="60" step="1" value="5"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Lower values check more frequently (higher CPU usage)</p>
+                    </div>
+                </div>
+                
+                <!-- Camera Settings Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                        Camera Settings
+                    </h3>
+                    
+                    <!-- Resolution -->
+                    <div class="mb-6">
+                        <label for="resolution" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Camera Resolution
+                        </label>
+                        <select id="resolution" name="resolution" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="640x480">640x480 (VGA)</option>
+                            <option value="1280x720">1280x720 (720p)</option>
+                            <option value="1640x1232" selected>1640x1232 (Default)</option>
+                            <option value="1920x1080">1920x1080 (1080p)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Alert Settings Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                        Alert Settings
+                    </h3>
+                    
+                    <!-- Audio Alerts -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="audio-alerts" name="audio_alerts" checked
+                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <span class="ml-3 text-sm font-semibold text-gray-700">
+                                Enable Audio Alerts (Piper TTS)
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <!-- Save Event Images -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="save-images" name="save_images" checked
+                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <span class="ml-3 text-sm font-semibold text-gray-700">
+                                Save Event Images
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <button type="button" onclick="loadConfiguration()" 
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold transition">
+                        <i class="fas fa-undo mr-2"></i>Reset to Current
+                    </button>
+                    
+                    <button type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg font-semibold transition">
+                        <i class="fas fa-save mr-2"></i>Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- System Info Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-info-circle text-gray-600 mr-2"></i>System Information
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-1">Model</p>
+                    <p class="font-semibold text-gray-800">YOLOv8 (best.pt)</p>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-1">AI Analysis</p>
+                    <p class="font-semibold text-gray-800">GPT-4 Vision API</p>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-1">Platform</p>
+                    <p class="font-semibold text-gray-800">Raspberry Pi</p>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-1">Object Classes</p>
+                    <p class="font-semibold text-gray-800">10 Types</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification (hidden by default) -->
+<div id="toast-notification" class="hidden fixed bottom-4 right-4 bg-white rounded-lg shadow-xl border-l-4 p-4 max-w-md z-50 transform transition-transform">
+    <div class="flex items-start">
+        <i id="toast-icon" class="text-2xl mr-3"></i>
+        <div class="flex-grow">
+            <h4 id="toast-title" class="font-bold text-gray-800"></h4>
+            <p id="toast-message" class="text-sm text-gray-600"></p>
+        </div>
+        <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600 ml-3">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/controls.js') }}"></script>
+{% endblock %}

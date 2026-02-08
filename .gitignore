@@ -1,0 +1,123 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+
+# Model files (large files)
+*.pt
+*.onnx
+best_ncnn_model/
+
+# Piper TTS engine files
+piper/
+
+# Documentation and process files
+process/
+tasks/
+*.txt
+
+# Allow README
+!README.md
+
+# Generated data
+suspicious_events/
+recordings/
+
+# Config and PID files
+*.json
+.detection_pid
+
+# Training data
+training/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+Entities PDF.odt
+Entities PDF.pdf
+Functional Requirements.odt
+Functional Requirements.pdf
+non Functional Requirements.odt
+non Functional Requirements.pdf
+prompt.txt
+
+code.txt
+command.txt
+BUG_FIXES.md
+.~lock.non Functional Requirements.odt#
+
+
+
+
